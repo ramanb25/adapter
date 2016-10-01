@@ -21,7 +21,7 @@
 
 FanucAdapter::FanucAdapter(int aPort)
   : Adapter(aPort), mAvail("avail"), mMessage("message"), mPartCount("part_count"),
-    mMacroSampleCount(0), mMacroPathCount(0), mPMCCount(0)
+    mMacroSampleCount(0), mMacroPathCount(0), mPMCCount(0), mCycleTime("cycleTime"), mCuttingTime("cuttingTime")
 {
   /* Alarms */
   addDatum(mMessage);
@@ -29,6 +29,8 @@ FanucAdapter::FanucAdapter(int aPort)
   /* Controller */
   addDatum(mAvail);
   addDatum(mPartCount);
+  addDatum(mCycleTime);
+  addDatum(mCuttingTime);
 
   mConfigured = mConnected = false;
   mAvail.unavailable();
@@ -101,6 +103,7 @@ void FanucAdapter::innerGatherDeviceData()
       getMacros();
       getPMC();
       getCounts();
+	  getCycleTime();
     }
   }
   catch (...)
@@ -401,6 +404,41 @@ void FanucAdapter::getMessages()
     mMessage.setValue(messages->data, buf);
   }
 }
+
+
+void FanucAdapter::getCycleTime()
+{
+	if (!mConnected)
+		return;
+
+	// Should just be a parameter read
+	IODBPSD buf,buf1;
+	short ret = cnc_rdparam(mFlibhndl, 6757, 0, 8, &buf);
+	short ret1 = cnc_rdparam(mFlibhndl, 6758, 0, 8, &buf1);
+	if (ret == EW_OK && ret1 == EW_OK)
+	{
+		int ans = buf1.u.ldata * 60 * 1000 + buf.u.ldata;
+		mCycleTime.setValue(ans);
+	}
+}
+
+
+void FanucAdapter::getCuttingTime()
+{
+	if (!mConnected)
+		return;
+
+	// Should just be a parameter read
+	IODBPSD buf, buf1;
+	short ret = cnc_rdparam(mFlibhndl, 6753, 0, 8, &buf);
+	short ret1 = cnc_rdparam(mFlibhndl, 6754, 0, 8, &buf1);
+	if (ret == EW_OK && ret1 == EW_OK)
+	{
+		int ans = buf1.u.ldata * 60 * 1000 + buf.u.ldata;
+		mCuttingTime.setValue(ans);
+	}
+}
+
 
 void FanucAdapter::getCounts()
 {
