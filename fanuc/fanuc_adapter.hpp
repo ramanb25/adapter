@@ -73,6 +73,8 @@ protected:
   
   Availability mAvail;
   IntEvent mPartCount;
+  IntEvent mCycleTime;
+  IntEvent mCuttingTime;
 
   /* Macro variables */
   MacroSample         *mMacroSample[MAX_MACROS];
@@ -101,6 +103,10 @@ protected:
   void reconnect();
   void disconnect();
   void getMessages();
+
+  void getCycleTime();
+
+  void getCuttingTime();
   
   void getPathData();
 
